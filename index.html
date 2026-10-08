@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>飛比價｜機票比價系統</title>
+  <meta name="description" content="比較直飛、轉機、外站四段票與里程兌換的機票價格，並查看歷史價格趨勢。">
+  <link rel="icon" href="images/logo.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ===== 頁首 ===== -->
+  <header class="site-header">
+    <div class="container header-inner">
+      <a class="brand" href="index.html">
+        <img src="images/logo.svg" alt="" width="36" height="36">
+        <span>飛比價</span>
+      </a>
+      <span class="header-note">台灣出發 · 機票比價</span>
+    </div>
+  </header>
+
+  <!-- ===== 主視覺 + 搜尋表單 ===== -->
+  <section class="hero">
+    <img class="hero-bg" src="images/hero.svg" alt="">
+    <div class="container">
+      <h1>一次比較直飛、轉機、外站四段票與里程</h1>
+      <p class="hero-sub">選擇出發地、目的地與人數，找出最划算的購買方式。</p>
+
+      <form id="searchForm" class="search-card" novalidate>
+        <div class="trip-toggle" role="radiogroup" aria-label="行程類型">
+          <label><input type="radio" name="trip" value="RT" checked> 來回</label>
+          <label><input type="radio" name="trip" value="OW"> 單程</label>
+        </div>
+
+        <div class="form-grid">
+          <label class="field">
+            <span>出發地</span>
+            <select id="origin"></select>
+          </label>
+          <label class="field">
+            <span>目的地</span>
+            <select id="dest"></select>
+          </label>
+          <label class="field">
+            <span>去程日期</span>
+            <input type="date" id="depart">
+          </label>
+          <label class="field" id="returnField">
+            <span>回程日期</span>
+            <input type="date" id="return">
+          </label>
+          <label class="field">
+            <span>大人（12 歲以上）</span>
+            <input type="number" id="adults" min="1" max="9" value="2">
+          </label>
+          <label class="field">
+            <span>兒童（2–11 歲）</span>
+            <input type="number" id="children" min="0" max="8" value="1">
+          </label>
+          <label class="field">
+            <span>嬰兒（未滿 2 歲）</span>
+            <input type="number" id="infants" min="0" max="4" value="0">
+          </label>
+          <label class="field">
+            <span>外站起點（四段票用）</span>
+            <select id="outstation"></select>
+          </label>
+        </div>
+
+        <p id="formError" class="form-error" role="alert" hidden></p>
+        <button type="submit" class="btn-primary">搜尋比價</button>
+      </form>
+    </div>
+  </section>
+
+  <main class="container">
+    <p class="disclaimer">
+      ⚠️ 本站價格為<strong>模擬資料</strong>，用於比較不同購買方式的概念。實際票價請點每筆結果的
+      「Google Flights」或「Skyscanner」連結查詢。
+    </p>
+
+    <!-- ===== 摘要 ===== -->
+    <section id="summary" class="summary-grid" aria-live="polite"></section>
+
+    <!-- ===== 分頁籤 ===== -->
+    <nav class="tabs" role="tablist">
+      <button role="tab" class="tab" aria-selected="true" data-tab="results">比價結果</button>
+      <button role="tab" class="tab" aria-selected="false" data-tab="flex">彈性日期 ±3</button>
+      <button role="tab" class="tab" aria-selected="false" data-tab="holiday">連假攻略</button>
+      <button role="tab" class="tab" aria-selected="false" data-tab="trend">價格趨勢</button>
+      <button role="tab" class="tab" aria-selected="false" data-tab="fourseg">外站四段票</button>
+      <button role="tab" class="tab" aria-selected="false" data-tab="miles">里程兌換</button>
+      <button role="tab" class="tab" aria-selected="false" data-tab="guide">使用說明</button>
+    </nav>
+
+    <!-- 比價結果 -->
+    <section class="panel" id="panel-results" role="tabpanel">
+      <details class="cost-settings" id="costSettings" open>
+        <summary>💸 真實總成本設定：把票價以外的花費也算進去</summary>
+        <div class="cost-grid">
+          <label class="check"><input type="checkbox" id="optBag" checked> 廉航托運行李</label>
+          <label class="check"><input type="checkbox" id="optSeat" checked> 廉航選位（全家坐一起）</label>
+          <label class="check"><input type="checkbox" id="optMeal"> 廉航機上餐點</label>
+          <label class="check"><input type="checkbox" id="optTransport" checked> 往返機場交通</label>
+          <label class="field">
+            <span>我的 1 小時值多少錢（NT$，0 = 不計）</span>
+            <input type="number" id="optTime" min="0" step="50" value="100">
+          </label>
+        </div>
+        <p class="muted small">
+          廉航（台灣虎航、酷航）票價不含行李、選位、餐點，傳統航空已包含。
+          時間價值 = 比最快的航班多花的時數 × 人數 × 每小時價值。
+        </p>
+
+        <h3 class="cost-sub">💳 我有的信用卡（可複選，每筆自動挑回饋最多的卡）</h3>
+        <div id="cardOptions" class="card-options"></div>
+        <label class="check"><input type="checkbox" id="optInsurance" checked>
+          把「刷卡送旅平險」算成省下的錢（每位旅客 NT$ 500）</label>
+        <p class="muted small">
+          里程回饋用「里程兌換」分頁設定的 1 哩價值換算成現金。卡片為通用範例，
+          實際回饋請依你的卡片條件修改 js/data.js 的 CREDIT_CARDS。
+        </p>
+      </details>
+
+      <div class="sort-row" role="radiogroup" aria-label="排序方式">
+        <span>排序依據：</span>
+        <label><input type="radio" name="sortMode" value="true" checked> 真實總成本</label>
+        <label><input type="radio" name="sortMode" value="fare"> 只看票價</label>
+      </div>
+      <div id="costCallout"></div>
+
+      <div class="chips" id="filterChips">
+        <button class="chip active" data-filter="all">全部</button>
+        <button class="chip" data-filter="direct">直飛</button>
+        <button class="chip" data-filter="transfer">轉機</button>
+        <button class="chip" data-filter="fourseg">外站四段票</button>
+        <button class="chip" data-filter="miles">里程兌換</button>
+      </div>
+      <div id="resultList" class="result-list"></div>
+    </section>
+
+    <!-- 彈性日期 -->
+    <section class="panel" id="panel-flex" role="tabpanel" hidden>
+      <div id="flexContent"></div>
+    </section>
+
+    <!-- 連假攻略 -->
+    <section class="panel" id="panel-holiday" role="tabpanel" hidden>
+      <div class="leave-setting">
+        <label class="field">
+          <span>每個連假最多願意請幾天假</span>
+          <select id="maxLeave">
+            <option value="0">不請假</option>
+            <option value="1">1 天</option>
+            <option value="2">2 天</option>
+            <option value="3" selected>3 天</option>
+            <option value="4">4 天</option>
+            <option value="5">5 天</option>
+          </select>
+        </label>
+        <p class="muted small">這個設定也會用在「外站四段票」的規劃器。</p>
+      </div>
+      <div id="holidayContent"></div>
+    </section>
+
+    <!-- 價格趨勢 -->
+    <section class="panel" id="panel-trend" role="tabpanel" hidden>
+      <div id="trendContent"></div>
+    </section>
+
+    <!-- 外站四段票 -->
+    <section class="panel" id="panel-fourseg" role="tabpanel" hidden>
+      <details class="explain" open>
+        <summary>什麼是外站四段票？</summary>
+        <p>
+          從「國外城市」（外站，例如曼谷）出發買的來回票，航線設計成
+          <strong>外站 → 台北 → 目的地 → 台北 → 外站</strong> 共四段。
+          因為外站市場的票價常比台灣便宜，加上先用廉航飛到外站的費用，總價有機會比直接從台灣買更低，
+          還能多出兩趟外站旅遊。
+        </p>
+        <p class="muted">注意：四段需依順序搭乘，第一段沒搭後面會全部失效；開票後通常需在一年內用完。</p>
+      </details>
+      <div id="foursegContent"></div>
+    </section>
+
+    <!-- 里程兌換 -->
+    <section class="panel" id="panel-miles" role="tabpanel" hidden>
+      <div class="miles-settings">
+        <label class="field">
+          <span>你認為 1 哩值多少錢（NT$）</span>
+          <input type="number" id="mileValue" min="0" max="5" step="0.05" value="0.4">
+        </label>
+        <div id="balanceInputs" class="balance-inputs"></div>
+      </div>
+      <div id="milesContent"></div>
+    </section>
+
+    <!-- 使用說明 -->
+    <section class="panel" id="panel-guide" role="tabpanel" hidden>
+      <div class="guide">
+        <h2>四種購買方式比較</h2>
+        <dl>
+          <dt><span class="badge badge-direct">直飛</span></dt>
+          <dd>不用轉機、最省時間，通常也最貴。</dd>
+          <dt><span class="badge badge-transfer">轉機</span></dt>
+          <dd>中途在其他城市換飛機，飛行時間較長，但常常比較便宜。</dd>
+          <dt><span class="badge badge-fourseg">外站四段票</span></dt>
+          <dd>從國外城市出發開票，總價要加上先飛到外站的廉航費用。適合一年內會多次出國的人。</dd>
+          <dt><span class="badge badge-miles">里程兌換</span></dt>
+          <dd>用累積的哩程換機票，只需付稅金與燃油附加費。用「1 哩值多少錢」換算成現金比較。</dd>
+        </dl>
+        <h2>本站獨有功能</h2>
+        <ul>
+          <li><b>連假攻略</b>：列出未來一年的台灣連假，算出請幾天假可以連休幾天，以及那幾天出發的票價。</li>
+          <li><b>四段票規劃器</b>：自動把兩趟外站旅遊排進連假，檢查第 4 段有沒有超過 1 年效期，可以匯出到手機行事曆。</li>
+          <li><b>真實總成本</b>：把廉航行李、選位、餐點、機場交通、轉機多花的時間都算成錢，避免「看似便宜」的陷阱。</li>
+          <li><b>信用卡回饋</b>：勾選你有的卡，每個選項自動挑回饋最多的卡（聯名卡里程、現金回饋、送旅平險），從總成本扣掉。</li>
+          <li><b>彈性日期 ±3 天</b>：7×7 價格表，一眼看出前後幾天哪個組合最便宜。</li>
+          <li>連假出發的票價會自動調高（一般連假 +15%，春節 +35%）。</li>
+        </ul>
+        <h2>人數計價規則（本站假設）</h2>
+        <ul>
+          <li>大人（12 歲以上）：全額</li>
+          <li>兒童（2–11 歲）：大人票價的 75%，里程也是 75%</li>
+          <li>嬰兒（未滿 2 歲，不佔座位）：大人票價的 10%，每位大人最多帶 1 位</li>
+        </ul>
+        <p class="muted">實際規則依各航空公司而定，廉價航空的兒童票常與大人同價。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <p>飛比價 · 純靜態網站練習作品 · 價格皆為模擬資料，僅供參考</p>
+    </div>
+  </footer>
+
+  <!-- 先載入資料，再載入程式 -->
+  <script src="js/data.js"></script>
+  <script src="js/holidays.js"></script>
+  <script src="js/planner.js"></script>
+  <script src="js/truecost.js"></script>
+  <script src="js/flex.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

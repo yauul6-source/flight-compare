@@ -1,0 +1,17 @@
+# 機密檔案（絕對不要上傳）
+.env
+.env.*
+*.key
+*.pem
+
+# 套件與系統檔
+node_modules/
+.DS_Store
+Thumbs.db
+
+# 本機開發設定
+.claude/
+
+# 與本網站無關的檔案（保留在電腦上，不上傳）
+3030-today.html
+vibe-site/

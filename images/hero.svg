@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 400" preserveAspectRatio="xMidYMid slice">
+  <!-- 雲朵 -->
+  <g fill="#ffffff" opacity="0.9">
+    <ellipse cx="150" cy="90" rx="70" ry="22"/>
+    <ellipse cx="190" cy="76" rx="44" ry="24"/>
+    <ellipse cx="980" cy="70" rx="80" ry="22"/>
+    <ellipse cx="1030" cy="56" rx="46" ry="24"/>
+    <ellipse cx="620" cy="40" rx="56" ry="16"/>
+    <ellipse cx="1100" cy="250" rx="70" ry="18"/>
+  </g>
+  <!-- 飛行路線 -->
+  <path d="M60 330 Q500 60 1140 150" fill="none" stroke="#1a7fd4" stroke-width="3"
+        stroke-dasharray="10 10" opacity="0.45"/>
+  <!-- 飛機 -->
+  <g transform="translate(1080 140) rotate(8) scale(1.4)" fill="#1a7fd4" opacity="0.8">
+    <path d="M-30 4 L26 -8 Q32 -9 31 -4 L27 -2 L10 4 L7 20 L2 21 L1 6 L-14 10 L-17 15 L-21 15 L-20 8 Z"/>
+  </g>
+  <!-- 起點 -->
+  <circle cx="60" cy="330" r="8" fill="#e8742a" opacity="0.8"/>
+</svg>
